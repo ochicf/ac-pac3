@@ -70,6 +70,10 @@ class WolfSheepPredation(Model):
         self.initial_wolves = initial_wolves
         self.sheep_reproduce = sheep_reproduce
         self.wolf_reproduce = wolf_reproduce
+        self.reproduces_by_type = dict([
+            (Sheep.__name__, sheep_reproduce),
+            (Wolf.__name__, wolf_reproduce),
+        ])
         self.wolf_gain_from_food = wolf_gain_from_food
         self.grass = grass
         self.grass_regrowth_time = grass_regrowth_time
@@ -143,3 +147,16 @@ class WolfSheepPredation(Model):
                   self.schedule.get_breed_count(Wolf))
             print('Final number sheep: ',
                   self.schedule.get_breed_count(Sheep))
+
+    def can_reproduce(self, agent, seed=None):
+        """Indicates whether an agent can reproduce based on the probability for its type.
+
+        Arguments:
+            agent (Sheep|Wolf): agent to check if it can reproduce
+            seed (int, optional): seed used to retrieve the random number used to determined
+                if the agent can reproduce. This allows the same check to be called multiple times
+                for the same agent without having different results
+        """
+        if seed is not None:
+            random.seed(seed)
+        return random.random() < self.reproduces_by_type[type(agent).__name__]
