@@ -57,7 +57,9 @@ model_params = {"grass": UserSettableParameter('checkbox', 'Grass Enabled', True
                                                         0.01,
                                                         description="The rate at which wolf agents reproduce."),
                 "wolf_gain_from_food": UserSettableParameter('slider', 'Wolf Gain From Food Rate', 20, 1, 50),
-                "sheep_gain_from_food": UserSettableParameter('slider', 'Sheep Gain From Food', 4, 1, 10)}
+                "sheep_gain_from_food": UserSettableParameter('slider', 'Sheep Gain From Food', 4, 1, 10),
+                "wolf_initial_age_limit": UserSettableParameter('slider', 'Wolf Initial Age Limit', Wolf.max_age * 0.75, 0, Wolf.max_age, 1),
+                "sheep_initial_age_limit": UserSettableParameter('slider', 'Sheep Initial Age Limit', Wolf.max_age * 0.75, 0, Sheep.max_age, 1)}
 
 server = ModularServer(WolfSheepPredation, [canvas_element, chart_element], "Wolf Sheep Predation", model_params)
 server.port = 8521
