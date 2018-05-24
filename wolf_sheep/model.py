@@ -91,6 +91,9 @@ class WolfSheepPredation(Model):
         self.datacollector = DataCollector(
             {"Wolves": lambda m: m.schedule.get_breed_count(Wolf),
              "Sheep": lambda m: m.schedule.get_breed_count(Sheep)})
+        self.datacollector_ages = DataCollector(
+            {"Wolves": lambda m: m.schedule.get_breed_average_age(Wolf),
+             "Sheep": lambda m: m.schedule.get_breed_average_age(Sheep)})
 
         # Create sheep:
         for i in range(self.initial_sheep):
@@ -129,11 +132,13 @@ class WolfSheepPredation(Model):
 
         self.running = True
         self.datacollector.collect(self)
+        self.datacollector_ages.collect(self)
 
     def step(self):
         self.schedule.step()
         # collect data
         self.datacollector.collect(self)
+        self.datacollector_ages.collect(self)
         if self.verbose:
             print([self.schedule.time,
                    self.schedule.get_breed_count(Wolf),
