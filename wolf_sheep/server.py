@@ -46,6 +46,9 @@ def wolf_sheep_portrayal(agent):
 canvas_element = CanvasGrid(wolf_sheep_portrayal, 20, 20, 500, 500)
 chart_element = ChartModule([{"Label": "Wolves", "Color": "#AA0000"},
                              {"Label": "Sheep", "Color": "#666666"}])
+chart_ages_element = ChartModule([{"Label": "Wolves", "Color": "#AA0000"},
+                                  {"Label": "Sheep", "Color": "#666666"}],
+                                 data_collector_name='datacollector_ages')
 
 model_params = {"grass": UserSettableParameter('checkbox', 'Grass Enabled', True),
                 "grass_regrowth_time": UserSettableParameter('slider', 'Grass Regrowth Time', 20, 1, 50),
@@ -57,7 +60,9 @@ model_params = {"grass": UserSettableParameter('checkbox', 'Grass Enabled', True
                                                         0.01,
                                                         description="The rate at which wolf agents reproduce."),
                 "wolf_gain_from_food": UserSettableParameter('slider', 'Wolf Gain From Food Rate', 20, 1, 50),
-                "sheep_gain_from_food": UserSettableParameter('slider', 'Sheep Gain From Food', 4, 1, 10)}
+                "sheep_gain_from_food": UserSettableParameter('slider', 'Sheep Gain From Food', 4, 1, 10),
+                "wolf_initial_age_limit": UserSettableParameter('slider', 'Wolf Initial Age Limit', Wolf.max_age * 0.75, 0, Wolf.max_age, 1),
+                "sheep_initial_age_limit": UserSettableParameter('slider', 'Sheep Initial Age Limit', Wolf.max_age * 0.75, 0, Sheep.max_age, 1)}
 
-server = ModularServer(WolfSheepPredation, [canvas_element, chart_element], "Wolf Sheep Predation", model_params)
+server = ModularServer(WolfSheepPredation, [canvas_element, chart_element, chart_ages_element], "Wolf Sheep Predation", model_params)
 server.port = 8521

@@ -30,6 +30,10 @@ class WolfSheepPredation(Model):
     initial_sheep = 100
     initial_wolves = 50
 
+    min_initial_age = -1  # set to -1 to indicate newborns, as on first step it will increment and become 0
+    sheep_initial_age_limit = Sheep.max_age * 0.75
+    wolf_initial_age_limit = Wolf.max_age * 0.75
+
     sheep_reproduce = 0.04
     wolf_reproduce = 0.05
 
@@ -47,7 +51,8 @@ class WolfSheepPredation(Model):
                  initial_sheep=100, initial_wolves=50,
                  sheep_reproduce=0.04, wolf_reproduce=0.05,
                  wolf_gain_from_food=20,
-                 grass=False, grass_regrowth_time=30, sheep_gain_from_food=4):
+                 grass=False, grass_regrowth_time=30, sheep_gain_from_food=4,
+                 sheep_initial_age_limit=Sheep.max_age * 0.75, wolf_initial_age_limit=Wolf.max_age * 0.75):
         '''
         Create a new Wolf-Sheep model with the given parameters.
 
@@ -68,8 +73,14 @@ class WolfSheepPredation(Model):
         self.width = width
         self.initial_sheep = initial_sheep
         self.initial_wolves = initial_wolves
+        self.sheep_initial_age_limit = sheep_initial_age_limit
+        self.wolf_initial_age_limit = wolf_initial_age_limit
         self.sheep_reproduce = sheep_reproduce
         self.wolf_reproduce = wolf_reproduce
+        self.reproduces_by_type = dict([
+            (Sheep.__name__, sheep_reproduce),
+            (Wolf.__name__, wolf_reproduce),
+        ])
         self.wolf_gain_from_food = wolf_gain_from_food
         self.grass = grass
         self.grass_regrowth_time = grass_regrowth_time
@@ -80,13 +91,17 @@ class WolfSheepPredation(Model):
         self.datacollector = DataCollector(
             {"Wolves": lambda m: m.schedule.get_breed_count(Wolf),
              "Sheep": lambda m: m.schedule.get_breed_count(Sheep)})
+        self.datacollector_ages = DataCollector(
+            {"Wolves": lambda m: m.schedule.get_breed_average_age(Wolf),
+             "Sheep": lambda m: m.schedule.get_breed_average_age(Sheep)})
 
         # Create sheep:
         for i in range(self.initial_sheep):
             x = random.randrange(self.width)
             y = random.randrange(self.height)
             energy = random.randrange(2 * self.sheep_gain_from_food)
-            sheep = Sheep((x, y), self, True, energy)
+            age = random.randint(self.min_initial_age, sheep_initial_age_limit)
+            sheep = Sheep((x, y), self, True, energy, age)
             self.grid.place_agent(sheep, (x, y))
             self.schedule.add(sheep)
 
@@ -95,7 +110,8 @@ class WolfSheepPredation(Model):
             x = random.randrange(self.width)
             y = random.randrange(self.height)
             energy = random.randrange(2 * self.wolf_gain_from_food)
-            wolf = Wolf((x, y), self, True, energy)
+            age = random.randint(self.min_initial_age, wolf_initial_age_limit)
+            wolf = Wolf((x, y), self, True, energy, age)
             self.grid.place_agent(wolf, (x, y))
             self.schedule.add(wolf)
 
@@ -116,11 +132,13 @@ class WolfSheepPredation(Model):
 
         self.running = True
         self.datacollector.collect(self)
+        self.datacollector_ages.collect(self)
 
     def step(self):
         self.schedule.step()
         # collect data
         self.datacollector.collect(self)
+        self.datacollector_ages.collect(self)
         if self.verbose:
             print([self.schedule.time,
                    self.schedule.get_breed_count(Wolf),
@@ -143,3 +161,16 @@ class WolfSheepPredation(Model):
                   self.schedule.get_breed_count(Wolf))
             print('Final number sheep: ',
                   self.schedule.get_breed_count(Sheep))
+
+    def can_reproduce(self, agent, seed=None):
+        """Indicates whether an agent can reproduce based on the probability for its type.
+
+        Arguments:
+            agent (Sheep|Wolf): agent to check if it can reproduce
+            seed (int, optional): seed used to retrieve the random number used to determined
+                if the agent can reproduce. This allows the same check to be called multiple times
+                for the same agent without having different results
+        """
+        if seed is not None:
+            random.seed(seed)
+        return random.random() < self.reproduces_by_type[type(agent).__name__]

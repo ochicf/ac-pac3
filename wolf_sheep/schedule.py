@@ -77,3 +77,8 @@ class RandomActivationByBreed(RandomActivation):
         Returns the current number of agents of certain breed in the queue.
         '''
         return len(self.agents_by_breed[breed_class])
+
+    def get_breed_average_age(self, breed_class):
+        """Returns the average age of agents of certain breed in the queue."""
+        ages_by_breed = [agent.age for agent in self.agents_by_breed[breed_class]]
+        return float(sum(ages_by_breed)) / max(len(ages_by_breed), 1)
