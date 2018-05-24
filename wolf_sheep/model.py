@@ -30,6 +30,10 @@ class WolfSheepPredation(Model):
     initial_sheep = 100
     initial_wolves = 50
 
+    min_initial_age = -1  # set to -1 to indicate newborns, as on first step it will increment and become 0
+    sheep_initial_age_limit = Sheep.max_age * 0.75
+    wolf_initial_age_limit = Wolf.max_age * 0.75
+
     sheep_reproduce = 0.04
     wolf_reproduce = 0.05
 
@@ -47,7 +51,8 @@ class WolfSheepPredation(Model):
                  initial_sheep=100, initial_wolves=50,
                  sheep_reproduce=0.04, wolf_reproduce=0.05,
                  wolf_gain_from_food=20,
-                 grass=False, grass_regrowth_time=30, sheep_gain_from_food=4):
+                 grass=False, grass_regrowth_time=30, sheep_gain_from_food=4,
+                 sheep_initial_age_limit=Sheep.max_age * 0.75, wolf_initial_age_limit=Wolf.max_age * 0.75):
         '''
         Create a new Wolf-Sheep model with the given parameters.
 
@@ -68,6 +73,8 @@ class WolfSheepPredation(Model):
         self.width = width
         self.initial_sheep = initial_sheep
         self.initial_wolves = initial_wolves
+        self.sheep_initial_age_limit = sheep_initial_age_limit
+        self.wolf_initial_age_limit = wolf_initial_age_limit
         self.sheep_reproduce = sheep_reproduce
         self.wolf_reproduce = wolf_reproduce
         self.reproduces_by_type = dict([
@@ -90,7 +97,8 @@ class WolfSheepPredation(Model):
             x = random.randrange(self.width)
             y = random.randrange(self.height)
             energy = random.randrange(2 * self.sheep_gain_from_food)
-            sheep = Sheep((x, y), self, True, energy)
+            age = random.randint(self.min_initial_age, sheep_initial_age_limit)
+            sheep = Sheep((x, y), self, True, energy, age)
             self.grid.place_agent(sheep, (x, y))
             self.schedule.add(sheep)
 
@@ -99,7 +107,8 @@ class WolfSheepPredation(Model):
             x = random.randrange(self.width)
             y = random.randrange(self.height)
             energy = random.randrange(2 * self.wolf_gain_from_food)
-            wolf = Wolf((x, y), self, True, energy)
+            age = random.randint(self.min_initial_age, wolf_initial_age_limit)
+            wolf = Wolf((x, y), self, True, energy, age)
             self.grid.place_agent(wolf, (x, y))
             self.schedule.add(wolf)
 
